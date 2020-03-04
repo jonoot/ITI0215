@@ -236,7 +236,7 @@ function startSendingRequests() {
             const p = known_peers[Math.floor(Math.random() * known_peers.length)];
             makeGet('127.0.0.1', p)
         }
-    }, 5000)
+    }, 10000)
 }
 
 function getDataFromFile(filePath, callback) {
