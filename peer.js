@@ -38,11 +38,9 @@ function handleGet(req, res) {
                     data = data.split('\n');
                     data.forEach(obj => {
                         try {
-                            obj = JSON.parse(obj);
-                            if (Object.keys(obj).includes(hash)) {
-                                console.log();
+                            if (obj.includes(hash)) {
                                 res.writeHead(200, {'Content-Type': 'application/json'})
-                                res.end((data.slice(data.indexOf(JSON.stringify(obj)), data.length)).encode())
+                                res.end(data.slice(data.indexOf(obj), data.length).toString())
                             }
                         } catch (e) {
                             console.log(e)
@@ -65,6 +63,7 @@ function handleGet(req, res) {
                         console.log('Error:- ' + error);
                         throw error;
                     }
+                    console.log(typeof data)
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(data);
                 });
