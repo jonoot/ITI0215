@@ -1,5 +1,6 @@
 //TODO: Success/Error messages
 //TODO: IP värgindus üle vaadata!
+//TODO: Muu fine, aga tuleb topelt requeste??
 
 const http = require('http');
 const url = require('url');
