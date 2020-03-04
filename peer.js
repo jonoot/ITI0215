@@ -7,13 +7,18 @@ const request = require('request');
 const crypto = require('crypto');
 
 let port = 0;
-let known_peers = [];
+let peerHost = 0;
+let knownPeers = [];
 let paused = false;
 
 process.argv.forEach(arg => {
     if (arg.includes('p=')) {
         port = parseInt(arg.split('=')[1]);
     }
+});
+
+require('dns').lookup(require('os').hostname(), function (err, add, fam) {
+    peerHost = add;
 });
 
 const filePath = `peers/peer-${port}.txt`;
@@ -29,15 +34,15 @@ const requestListener = function (req, res) {
 };
 
 const server = http.createServer(requestListener);
-server.listen(port);
+server.listen(port, peerHost);
 console.log('Starting peer on port ' + port);
 
 try {
     if (fileExists(filePath)) {
         console.log('File exists. Reading known hosts...');
         getDataFromFile(filePath, function(result) {
-            known_peers = result;
-            console.log(known_peers);
+            knownPeers = result;
+            console.log(knownPeers);
             startSendingRequests()
         });
     } else {
@@ -49,7 +54,7 @@ try {
                         appendToFile(s);
                     });
                     console.log('Known peers: ');
-                    console.log(known_peers);
+                    console.log(knownPeers);
                     startSendingRequests();
                 })
             }
@@ -131,11 +136,11 @@ function returnKnownPeers(req, parsedUrl, res) {
     console.log(req.url);
     const clientPort = parsedUrl.query.client;
     console.log('Request from port ' + clientPort + '\n');
-    if (!known_peers.includes(clientPort)) {
+    if (!knownPeers.includes(clientPort)) {
         console.log('Adding new port ' + clientPort + ' to known peers \n');
         appendToFile(clientPort);
     }
-    endRes(res, 200, '', known_peers.toString());
+    endRes(res, 200, '', knownPeers.toString());
 }
 
 function returnAllBlocks(res) {
@@ -219,9 +224,9 @@ function validTransaction(transaction) {
 
 function saveTransactionAndSendToOthers(transaction, res) {
     saveTransaction(transaction, res);
-    known_peers.forEach(peer => {
-        console.log('POSTing new transaction to ' + '0.0.0.0:' + peer);
-        const req_url = 'http://' + '0.0.0.0:' + peer + '/block';
+    knownPeers.forEach(peer => {
+        console.log('POSTing new transaction to ' + peer);
+        const req_url = 'http://' + peer + '/block';
 
         request.post({
             headers: {'content-type': 'text'},
@@ -236,8 +241,8 @@ function saveTransactionAndSendToOthers(transaction, res) {
 function startSendingRequests() {
     setInterval(function () {
         if (!paused) {
-            const p = known_peers[Math.floor(Math.random() * known_peers.length)];
-            makeGet('0.0.0.0', p)
+            const p = knownPeers[Math.floor(Math.random() * knownPeers.length)];
+            makeGet(p.split(':')[0], p.split(':')[1])
         }
     }, 10000)
 }
@@ -253,20 +258,20 @@ function getDataFromFile(filePath, callback) {
 }
 
 function appendToFile(line) {
-    if (!known_peers.includes(line)) {
+    if (!knownPeers.includes(line)) {
         const stream = fs.createWriteStream(filePath, {flags: 'a'});
         stream.write(line + '\n');
         stream.end();
-        known_peers.push(line);
+        knownPeers.push(line);
         console.log('Added new port ' + line)
     }
 }
 
 function removePeer(p) {
     if (p !== '8080' && p !== '9000' && p !== '9001') {
-        known_peers = known_peers.filter(h => h !== p);
-        console.log(known_peers);
-        fs.writeFile(filePath, known_peers.join('\n'), function () {
+        knownPeers = knownPeers.filter(h => h !== p);
+        console.log(knownPeers);
+        fs.writeFile(filePath, knownPeers.join('\n'), function () {
 
         });
     }
@@ -300,11 +305,11 @@ function makeGet(host, p) {
             }
         }
         if (!error && response.statusCode === 200) {
-            known_peers = [...new Set(known_peers.concat(body.split(',')))];
-            console.log(known_peers);
+            knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
+            console.log(knownPeers);
             console.log(body.split(','));
 
-            fs.writeFile(filePath, known_peers.join('\n'), function () {
+            fs.writeFile(filePath, knownPeers.join('\n'), function () {
 
             });
         }
