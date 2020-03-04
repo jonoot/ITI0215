@@ -19,15 +19,22 @@ const blockFilePath = `blocks/peer-${port}.txt`;
 
 console.log('Starting peer on port ' + port);
 
+function endRes(res, head, contentType, end) {
+    if (contentType) {
+        res.writeHead(head, contentType);
+        res.end(end);
+    }
+    res.writeHead(head);
+    res.end(end);
+}
+
 function returnAllBlocks(res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            res.writeHead(500);
-            res.end('Error reading blocks');
+            endRes(res, 500,'', 'Error reading blocks');
         }
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(data.split('\n').toString());
+        endRes(res, 200, {'Content-Type': 'application/json'}, data.split('\n').toString());
     });
 }
 
@@ -35,23 +42,19 @@ function returnBlocksFromHash(hash, res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            res.writeHead(500);
-            res.end('Error reading blocks')
+            endRes(res, 500, '', 'Error reading blocks');
         }
         try {
             data = data.split('\n');
             data.forEach(row => {
                 if (row.includes(hash)) {
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(data.slice(data.indexOf(row), data.length).toString())
+                    endRes(res, 200, {'Content-Type': 'application/json'}, data.slice(data.indexOf(row), data.length).toString());
                 }
             });
-            res.writeHead(404);
-            res.end('Not found')
+            endRes(res, 404, '', 'Not found');
         } catch (e) {
             console.log(e);
-            res.writeHead(500);
-            res.end('Error reading blocks')
+            endRes(res, 500, '', 'Error reading blocks');
         }
     });
 }
@@ -64,8 +67,7 @@ function returnKnownHosts(req, parsedUrl, res) {
         console.log('Adding new port ' + clientPort + ' to known hosts \n');
         appendToFile(clientPort);
     }
-    res.writeHead(200);
-    res.end(known_hosts.toString());
+    endRes(res, 200, '', known_hosts.toString());
 }
 
 function handleGet(req, res) {
@@ -78,21 +80,18 @@ function handleGet(req, res) {
             if (fileExists(blockFilePath)) {
                 returnBlocksFromHash(hash, res);
             } else {
-                res.writeHead(404);
-                res.end('No blocks found')
+                endRes(res, 404, '', 'No blocks found');
             }
 
         } else {
             if (fileExists(blockFilePath)) {
                 returnAllBlocks(res);
             } else {
-                res.writeHead(404);
-                res.end('No blocks found')
+                endRes(res, 404, '', 'No blocks found');
             }
         }
     } else {
-        res.writeHead(200);
-        res.end('Get request received')
+        endRes(res, 200, '', 'Get request received');
     }
 
     /*console.log(req.url);
@@ -115,13 +114,11 @@ function saveTransaction(transaction, res) {
         const stream = fs.createWriteStream(blockFilePath, {flags: 'a'});
         stream.write(transaction + '\n');
         stream.end();
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end('post received')
+        endRes(res, 200, {'Content-Type': 'text/html'}, 'post received');
     } else {
         fs.writeFile(blockFilePath, transaction + '\n', function (err) {
             if (!err) {
-                res.writeHead(200, {'Content-Type': 'text/html'});
-                res.end('post received')
+                endRes(res, 200, {'Content-Type': 'text/html'}, 'post received');
             }
         })
     }
@@ -188,13 +185,11 @@ function handlePost(req, res) {
                         transaction = JSON.stringify(transaction);
                         saveTransactionAndSendToOthers(transaction, res);
                     } else {
-                        res.writeHead(400);
-                        res.end('Transaction already exists')
+                        endRes(res, 400, '', 'Transaction already exists');
                     }
                 })
             } else {
-                res.writeHead(400);
-                res.end('Transaction not valid');
+                endRes(res, 400, '', 'Transaction not valid');
             }
 
         } else if (req.url === '/block') {
@@ -202,8 +197,7 @@ function handlePost(req, res) {
             console.log(transaction);
             saveTransaction(transaction, res);
         } else {
-            res.writeHead(500);
-            res.end('Endpoint not defined')
+            endRes(res, 500, '', 'Endpoint not defined');
         }
 
     })
