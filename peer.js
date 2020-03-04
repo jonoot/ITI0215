@@ -276,6 +276,7 @@ function retryRequest(h, p) {
     let count = 1;
     const interval = setInterval(function () {
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
+        makeGet(h, p);
         count++;
         if (count > 5) {
             console.log('Peer unreachable. Deleting from known peers');
@@ -283,7 +284,7 @@ function retryRequest(h, p) {
             clearInterval(interval);
             paused = false;
         }
-    }, 2000)
+    }, 4000)
 }
 
 function makeGet(host, p) {
@@ -292,8 +293,10 @@ function makeGet(host, p) {
     request({url: req_url}, function (error, response, body) {
         if (error) {
             console.log(host + ':' + p + ' unreachable\n');
-            paused = true;
-            retryRequest(host, p)
+            if (!paused) {
+                paused = true;
+                retryRequest(host, p)
+            }
         }
         if (!error && response.statusCode === 200) {
             known_peers = [...new Set(known_peers.concat(body.split(',')))];

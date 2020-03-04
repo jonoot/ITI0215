@@ -25,7 +25,7 @@ After starting up a peer, it will automatically start sending GET requests (/kno
 Requests are sent every 10 seconds. Peer from known peers list is randomly chosen.
 Already requested peers can be requested again as they might have new 
 information. If request is successful, new peers will be added to known hosts.<br>If request is not successful, 
-automatic requesting is paused and unreachable peer is pinged 5 more times with 3 second intervals. If peer remains
+automatic requesting is paused and unreachable peer is pinged 5 more times with 5
 unreachable, it will be removed from known peers. Otherwise program continues as it did for successful request.
 <br><strong>Peer which receives request</strong> (GET /known-peers) will save requesting peer as known host.
 
