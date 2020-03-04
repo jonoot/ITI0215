@@ -18,9 +18,8 @@ process.argv.forEach(arg => {
     }
 });
 
-require('dns').lookup(require('os').hostname(), function (err, add, fam) {
-    peerHost = add;
-});
+const ip = require("ip");
+peerHost = ip.address();
 
 const filePath = `peers/peer-${port}.txt`;
 const blockFilePath = `blocks/peer-${port}.txt`;
