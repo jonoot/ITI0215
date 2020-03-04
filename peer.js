@@ -1,3 +1,5 @@
+//TODO: Success/Error messages
+
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
@@ -270,6 +272,7 @@ function removePeer(p) {
 }
 
 function retryRequest(h, p) {
+    //TODO: See pole tehtud????
     let count = 1;
     const interval = setInterval(function () {
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
