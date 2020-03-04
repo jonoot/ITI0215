@@ -19,54 +19,69 @@ const blockFilePath = `blocks/peer-${port}.txt`;
 
 console.log('Starting peer on port ' + port);
 
+function returnAllBlocks(res) {
+    fs.readFile(blockFilePath, 'utf8', function (error, data) {
+        if (error) {
+            console.log('Error:- ' + error);
+            throw error;
+        }
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(data.split('\n').toString());
+    });
+}
+
+function returnBlocksFromHash(hash, res) {
+    fs.readFile(blockFilePath, 'utf8', function (error, data) {
+        if (error) {
+            console.log('Error:- ' + error);
+            throw error;
+        }
+        data = data.split('\n');
+        data.forEach(obj => {
+            try {
+                if (obj.includes(hash)) {
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(data.slice(data.indexOf(obj), data.length).toString())
+                }
+            } catch (e) {
+                console.log(e)
+            }
+
+        });
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end();
+    });
+}
+
+function returnKnownHosts(req, parsedUrl, res) {
+    console.log(req.url);
+    const clientPort = parsedUrl.query.client;
+    console.log('Request from port ' + clientPort + '\n');
+    if (!known_hosts.includes(clientPort)) {
+        console.log('Adding new port ' + clientPort + ' to known hosts \n');
+        appendToFile(clientPort);
+    }
+    res.writeHead(200);
+    res.end(known_hosts.toString());
+}
+
 function handleGet(req, res) {
-
-    //TODO: blokid JSON kujule igal pool
-
     const parsedUrl = url.parse(req.url, true);
-    console.log(parsedUrl.pathname);
-    if (parsedUrl.pathname === '/getBlocks') {
+    if (parsedUrl.pathname === '/known-hosts') {
+        returnKnownHosts(req, parsedUrl, res);
+    } else if (parsedUrl.pathname === '/getBlocks') {
         const hash = parsedUrl.query.hash;
         if (hash) {
-            //TODO: Return list of blocks from hash
-            if (fs.existsSync(blockFilePath)) {
-                fs.readFile(blockFilePath, 'utf8', function(error, data) {
-                    if (error) {
-                        console.log('Error:- ' + error);
-                        throw error;
-                    }
-                    data = data.split('\n');
-                    data.forEach(obj => {
-                        try {
-                            if (obj.includes(hash)) {
-                                res.writeHead(200, {'Content-Type': 'application/json'})
-                                res.end(data.slice(data.indexOf(obj), data.length).toString())
-                            }
-                        } catch (e) {
-                            console.log(e)
-                        }
-
-                    });
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end();
-                });
+            if (fileExists(blockFilePath)) {
+                returnBlocksFromHash(hash, res);
             } else {
                 res.writeHead(404);
                 res.end('No blocks found')
             }
 
         } else {
-            //TODO: Return all blocks
-            if (fs.existsSync(blockFilePath)) {
-                fs.readFile(blockFilePath, 'utf8', function(error, data) {
-                    if (error) {
-                        console.log('Error:- ' + error);
-                        throw error;
-                    }
-                    console.log(typeof data)
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(data);
-                });
+            if (fileExists(blockFilePath)) {
+                returnAllBlocks(res);
             } else {
                 res.writeHead(404);
                 res.end('No blocks found')
@@ -88,8 +103,12 @@ function handleGet(req, res) {
     res.end(known_hosts.toString());*/
 }
 
+function fileExists(filePath) {
+    return fs.existsSync(filePath);
+}
+
 function saveTransaction(transaction, res) {
-    if (fs.existsSync(blockFilePath)) {
+    if (fileExists(blockFilePath)) {
         const stream = fs.createWriteStream(blockFilePath, {flags: 'a'});
         stream.write(transaction + '\n');
         stream.end();
@@ -106,7 +125,7 @@ function saveTransaction(transaction, res) {
 }
 
 function transactionExists(transaction, callback) {
-    if (!fs.existsSync(blockFilePath)) {
+    if (!fileExists(blockFilePath)) {
         callback(false);
     }
     fs.readFile(blockFilePath, 'utf8', function(error, data) {
@@ -202,7 +221,7 @@ function startSendingRequests() {
 }
 
 try {
-    if (fs.existsSync(filePath)) {
+    if (fileExists(blockFilePath)) {
         console.log('File exists. Reading known hosts...');
         getDataFromFile(filePath, function(result) {
             known_hosts = result;
