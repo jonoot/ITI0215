@@ -23,7 +23,8 @@ function returnAllBlocks(res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            throw error;
+            res.writeHead(500);
+            res.end('Error reading blocks');
         }
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(data.split('\n').toString());
@@ -34,22 +35,24 @@ function returnBlocksFromHash(hash, res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            throw error;
+            res.writeHead(500);
+            res.end('Error reading blocks')
         }
-        data = data.split('\n');
-        data.forEach(obj => {
-            try {
-                if (obj.includes(hash)) {
+        try {
+            data = data.split('\n');
+            data.forEach(row => {
+                if (row.includes(hash)) {
                     res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(data.slice(data.indexOf(obj), data.length).toString())
+                    res.end(data.slice(data.indexOf(row), data.length).toString())
                 }
-            } catch (e) {
-                console.log(e)
-            }
-
-        });
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end();
+            });
+            res.writeHead(404);
+            res.end('Not found')
+        } catch (e) {
+            console.log(e);
+            res.writeHead(500);
+            res.end('Error reading blocks')
+        }
     });
 }
 
