@@ -40,7 +40,7 @@ console.log('Starting peer on port ' + port);
 
 try {
     if (fileExists(filePath)) {
-        console.log('File exists. Reading known peers...');
+        console.log('File exists. Reading known hosts...');
         getDataFromFile(filePath, function(result) {
             knownPeers = result;
             console.log(knownPeers);
@@ -135,11 +135,11 @@ function endRes(res, head, contentType, end) {
 
 function returnKnownPeers(req, parsedUrl, res) {
     console.log(req.url);
-    const clientAddress = parsedUrl.query.client;
-    console.log('Request from peer ' + clientAddress + '\n');
-    if (!knownPeers.includes(clientAddress)) {
-        console.log('Adding new peer ' + clientAddress + ' to known peers \n');
-        appendToFile(clientAddress);
+    const clientPort = parsedUrl.query.client;
+    console.log('Request from port ' + clientPort + '\n');
+    if (!knownPeers.includes(clientPort)) {
+        console.log('Adding new port ' + clientPort + ' to known peers \n');
+        appendToFile(clientPort);
     }
     endRes(res, 200, '', knownPeers.toString());
 }
