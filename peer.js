@@ -135,7 +135,6 @@ function endRes(res, head, contentType, end) {
 function returnKnownPeers(req, parsedUrl, res) {
     console.log(req.url);
     const clientPort = parsedUrl.query.client;
-    console.log('Request from port ' + clientPort + '\n');
     if (!knownPeers.includes(clientPort)) {
         console.log('Adding new port ' + clientPort + ' to known peers \n');
         appendToFile(clientPort);
@@ -253,7 +252,7 @@ function getDataFromFile(filePath, callback) {
             console.log('Error:- ' + error);
             throw error;
         }
-        callback(data.split('\n').filter(s => parseInt(s) !== port));
+        callback(data.split('\n').filter(s => s !== '' && parseInt(s) !== port));
     });
 }
 
@@ -285,7 +284,7 @@ function retryRequest(h, p) {
         count++;
         if (count > 5) {
             console.log('Peer unreachable. Deleting from known peers');
-            removePeer(p);
+            removePeer(h + ':' + p);
             clearInterval(interval);
             paused = false;
         }
