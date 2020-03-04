@@ -140,46 +140,62 @@ function transactionExists(transaction, callback) {
     });
 }
 
+function createTransaction(body) {
+    let transaction = {};
+    const sha256 = crypto.createHash('sha256');
+    sha256.update(body);
+    let key = sha256.digest('hex');
+    transaction[key] = body;
+    return transaction;
+}
+
+function validTransaction(transaction) {
+    return transaction.from !== undefined &&
+        transaction.to !== undefined &&
+        transaction.date !== undefined &&
+        transaction.amount !== undefined;
+}
+
+function saveTransactionAndSendToOthers(transaction, res) {
+    saveTransaction(transaction, res);
+    known_hosts.forEach(peer => {
+        console.log('POSTing new transaction to ' + '127.0.0.1:' + peer);
+        const req_url = 'http://' + '127.0.0.1:' + peer + '/block';
+
+        request.post({
+            headers: {'content-type': 'text'},
+            url: req_url,
+            body: transaction
+        }, function (error, response, body) {
+            console.log(body);
+        });
+    });
+}
+
 function handlePost(req, res) {
     let body = '';
-    let transaction = 'corrupt';
+    let transaction = '';
     req.on('data', function(data) {
         body += data;
-        console.log('Partial body: ' + body)
     });
     req.on('end', function() {
-        //TODO: Väljade valideerimine - et kõik olemas
         if (req.url === '/inv') {
-            let transaction = {};
-            const sha256 = crypto.createHash('sha256');
-            sha256.update(body);
-            let key = sha256.digest('hex');
-            transaction[key] = body;
-
-            transactionExists(transaction, function (result) {
-                if (!result) {
-                    transaction = JSON.stringify(transaction);
-                    saveTransaction(transaction, res);
-                    known_hosts.forEach(peer => {
-                        console.log('POSTing new transaction to ' + '127.0.0.1:' + peer);
-                        const req_url = 'http://' + '127.0.0.1:' + peer + '/block';
-                        console.log(req_url);
-
-                        request.post({
-                            headers: {'content-type' : 'text'},
-                            url: req_url,
-                            body: transaction
-                        }, function(error, response, body){
-                            console.log(body);
-                        });
-                    });
-                } else {
-                    res.writeHead(400);
-                    res.end('Transaction already exists')
-                }
-            })
-
-
+            if (validTransaction(JSON.parse(body))) {
+                console.log('Transaction valid')
+                let transaction = createTransaction(body);
+                transactionExists(transaction, function (result) {
+                    if (!result) {
+                        transaction = JSON.stringify(transaction);
+                        saveTransactionAndSendToOthers(transaction, res);
+                    } else {
+                        res.writeHead(400);
+                        res.end('Transaction already exists')
+                    }
+                })
+            } else {
+                res.writeHead(400);
+                res.end('Transaction not valid');
+            }
 
         } else if (req.url === '/block') {
             transaction = body;
