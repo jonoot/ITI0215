@@ -20,6 +20,7 @@ const filePath = `peers/peer-${port}.txt`;
 const blockFilePath = `blocks/peer-${port}.txt`;
 
 const requestListener = function (req, res) {
+    console.log('request from ' + req.connection.remoteAddress + ':' + req.connection.remotePort);
     if (req.method === 'GET') {
         handleGet(req, res);
     } else if (req.method === 'POST') {
@@ -79,7 +80,7 @@ function handleGet(req, res) {
             }
         }
     } else {
-        endRes(res, 200, '', 'Get request received');
+        endRes(res, 500, '', 'Endpoint not defined');
     }
 }
 
@@ -219,8 +220,8 @@ function validTransaction(transaction) {
 function saveTransactionAndSendToOthers(transaction, res) {
     saveTransaction(transaction, res);
     known_peers.forEach(peer => {
-        console.log('POSTing new transaction to ' + '127.0.0.1:' + peer);
-        const req_url = 'http://' + '127.0.0.1:' + peer + '/block';
+        console.log('POSTing new transaction to ' + '0.0.0.0:' + peer);
+        const req_url = 'http://' + '0.0.0.0:' + peer + '/block';
 
         request.post({
             headers: {'content-type': 'text'},
@@ -236,7 +237,7 @@ function startSendingRequests() {
     setInterval(function () {
         if (!paused) {
             const p = known_peers[Math.floor(Math.random() * known_peers.length)];
-            makeGet('127.0.0.1', p)
+            makeGet('0.0.0.0', p)
         }
     }, 10000)
 }
