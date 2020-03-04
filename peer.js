@@ -93,16 +93,6 @@ function handleGet(req, res) {
     } else {
         endRes(res, 200, '', 'Get request received');
     }
-
-    /*console.log(req.url);
-    const clientPort = url.parse(req.url, true).query.client;
-    console.log('Request from port ' + clientPort + '\n');
-    if (!known_hosts.includes(clientPort)) {
-        console.log('Adding new port ' + clientPort + ' to known hosts \n');
-        appendToFile(clientPort);
-    }
-    res.writeHead(200);
-    res.end(known_hosts.toString());*/
 }
 
 function fileExists(filePath) {
@@ -210,15 +200,6 @@ const requestListener = function (req, res) {
         handlePost(req, res);
     }
     console.log(req.method)
-    /*console.log(req.url);
-    const clientPort = url.parse(req.url, true).query.client;
-    console.log('Request from port ' + clientPort + '\n');
-    if (!known_hosts.includes(clientPort)) {
-        console.log('Adding new port ' + clientPort + ' to known hosts \n');
-        appendToFile(clientPort);
-    }
-    res.writeHead(200);
-    res.end(known_hosts.toString());*/
 };
 const server = http.createServer(requestListener);
 server.listen(port);
