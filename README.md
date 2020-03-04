@@ -1,5 +1,5 @@
-#Distributed ledger
-###Get started
+# Distributed ledger
+### Get started
 a) Clone project
 
 `git clone https://github.com/jonoot/ITI0215.git`
@@ -8,8 +8,8 @@ b) Install dependencies
 
 run `npm install` in project directory
 
-###How program works
-####Initializing
+### How program works
+#### Initializing
 To start a new peer run `node peer.js p=<port>` in project directory
 
 Start server peers before running new nodes. Server ports are listed in 'servers.txt' (8080, 9000, 9001)
@@ -20,7 +20,7 @@ Also, peer's known hosts file will be created under 'peers' directory.
 
 Known hosts file format example: `'peer-<port>.txt'`. 
 
-####Finding new peers
+#### Finding new peers
 After starting up a peer, it will automatically start sending GET requests (/known-peers) to known peers.
 Requests are sent every 10 seconds. Peer from known peers list is randomly chosen.
 Already requested peers can be requested again as they might have new 
@@ -29,7 +29,7 @@ automatic requesting is paused and unreachable peer is pinged 5 more times with 
 unreachable, it will be removed from known peers. Otherwise program continues as it did for successful request.
 <br><strong>Peer which receives request</strong> (GET /known-peers) will save requesting peer as known host.
 
-####Sending transactions
+#### Sending transactions
 To add new transaction send POST request (/inv) to one of the peers. POST request must have transaction as JSON object.
 If received transaction is valid and it's not existing already, it will be saved to peer's known blocks under 'blocks'
 directory. Transaction is valid, if it has all fields filled: from, to, date, amount.
@@ -41,12 +41,12 @@ Known blocks file format example: `'peer-<port>.txt'`.
 Received transaction will be also sent to all known peers with POST request (/block). Blocks which are received over
 /block request will not be sent to others again.
 
-####Getting transactions
+#### Getting transactions
 To view all blocks use GET request (/getBlocks). Use "hash" parameter to view blocks from specific hash.
 
-###Endpoints
+### Endpoints
 
-####GET
+#### GET
 
 `/known-peers?client=<clientPort>`
 <br>returns list of known peers as string
@@ -57,7 +57,7 @@ To view all blocks use GET request (/getBlocks). Use "hash" parameter to view bl
 `/getBlocks?hash=<hash>`
 <br>returns list of blocks as JSON objects starting from given hash
 
-####POST
+#### POST
 
 `/inv`
 <br>requires body: transaction as JSON object
