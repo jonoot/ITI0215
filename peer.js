@@ -35,7 +35,7 @@ const requestListener = function (req, res) {
 
 const server = http.createServer(requestListener);
 server.listen(port, peerHost);
-console.log('Starting peer on port ' + port);
+console.log('Starting peer on ' + peerHost + ':' + port);
 
 try {
     if (fileExists(filePath)) {
