@@ -1,4 +1,5 @@
 //TODO: Success/Error messages
+//TODO: IP värgindus üle vaadata!
 
 const http = require('http');
 const url = require('url');
@@ -253,7 +254,7 @@ function getDataFromFile(filePath, callback) {
             console.log('Error:- ' + error);
             throw error;
         }
-        callback(data.split('\n').filter(s => s.match(/^-?\d+$/) && parseInt(s) !== port));
+        callback(data.split('\n').filter(s => parseInt(s) !== port));
     });
 }
 
@@ -278,7 +279,6 @@ function removePeer(p) {
 }
 
 function retryRequest(h, p) {
-    //TODO: See pole tehtud????
     let count = 1;
     const interval = setInterval(function () {
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
