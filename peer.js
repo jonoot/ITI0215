@@ -8,6 +8,7 @@ let port = 0;
 let peerHost = 0;
 let knownPeers = [];
 let paused = false;
+let retrying = false;
 
 process.argv.forEach(arg => {
     if (arg.includes('p=')) {
@@ -18,8 +19,8 @@ process.argv.forEach(arg => {
 const ip = require("ip");
 peerHost = ip.address();
 
-const filePath = `peers/peer-${port}.txt`;
-const blockFilePath = `blocks/peer-${port}.txt`;
+const filePath = `peers/peer-${peerHost}-${port}.txt`;
+const blockFilePath = `blocks/peer-${peerHost}-${port}.txt`;
 
 const requestListener = function (req, res) {
     console.log('request from ' + req.connection.remoteAddress + ':' + req.connection.remotePort);
@@ -102,7 +103,7 @@ function handlePost(req, res) {
     req.on('end', function() {
         if (req.url === '/inv') {
             if (validTransaction(JSON.parse(body))) {
-                console.log('Transaction valid')
+                console.log('Transaction valid');
                 let transaction = createTransaction(body);
                 transactionExists(transaction, function (result) {
                     if (!result) {
@@ -292,7 +293,7 @@ function appendToFile(line) {
 }
 
 function removePeer(p) {
-    const removePort = p.split(':')[1]
+    const removePort = p.split(':')[1];
     if (removePort !== '8080' && removePort !== '9000' && removePort !== '9001') {
         knownPeers = knownPeers.filter(h => h !== p);
         fs.writeFile(filePath, knownPeers.join('\n'), function () {
@@ -304,10 +305,14 @@ function removePeer(p) {
 function retryRequest(h, p) {
     let count = 1;
     const interval = setInterval(function () {
+        if (!retrying) {
+            clearInterval(interval);
+            paused = false;
+        }
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
         makeGet(h, p);
         count++;
-        if (count > 5) {
+        if (count > 5 && retrying) {
             console.log('Peer unreachable. Deleting from known peers');
             removePeer(h + ':' + p);
             clearInterval(interval);
@@ -324,13 +329,14 @@ function makeGet(host, p) {
             console.log(host + ':' + p + ' unreachable\n');
             if (!paused) {
                 paused = true;
+                retrying = true;
                 retryRequest(host, p)
             }
         }
         if (!error && response.statusCode === 200) {
+            retrying = false;
             knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
             knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
-            console.log(knownPeers);
             console.log(body.split(','));
 
             fs.writeFile(filePath, knownPeers.join('\n'), function () {

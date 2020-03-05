@@ -18,7 +18,7 @@ If starting new peer is successful, peer's already known hosts are logged in con
 used before (new peer) then a list of known peers will be created by reading data from 'servers.txt' file.
 Also, peer's known hosts file will be created under 'peers' directory.
 
-Known hosts file format example: `'peer-<port>.txt'`. 
+Known hosts file format example: `'peer-<host>-<port>.txt'`. 
 
 #### Finding new peers
 After starting up a peer, it will automatically start sending GET requests (/known-peers) to known peers.
@@ -34,7 +34,7 @@ To add new transaction send POST request (/inv) to one of the peers. POST reques
 If received transaction is valid and it's not existing already, it will be saved to peer's known blocks under 'blocks'
 directory. Transaction is valid, if it has all fields filled: from, to, date, amount.
 
-Known blocks file format example: `'peer-<port>.txt'`.
+Known blocks file format example: `'peer-<host>-<port>.txt'`.
 <br>Block will be saved as `{"hash":"transaction"}`. 
 <br>Example: `{"07304f6f550af2d7ab9a768abbcdcee2b9b4d88523f477d8655090179b18fb5a":"{\n\t\"from\": \"Jaan\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}`
  
