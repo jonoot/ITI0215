@@ -1,1 +1,0 @@
-{"2bb144f1d3ad3fc09ed070936b09f798cb69a182e2c81d241b7876e5f2a4df68":"{\n\t\"from\": \"Tom\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}
