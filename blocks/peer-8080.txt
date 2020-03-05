@@ -1,4 +1,0 @@
-{"07304f6f550af2d7ab9a768abbcdcee2b9b4d88523f477d8655090179b18fb5a":"{\n\t\"from\": \"Jaan\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}
-{"1662e2c9a4a7a8bac2a3f8d88ec29f39f98f0146a4bfd6bca413bba634600161":"{\n\t\"from\": \"Jaanus\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}
-{"a300d477577c80b281ea58e708fed1f3ebcd491ecb773eefe097cad1e2fd6d47":"{\n\t\"from\": \"Jaanus23\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}
-{"2a51f468395af00c8cc9686490e0c8c61f857726c714c370cc061a2de93c05de":"{\n\t\"from\": \"Jaanus6000\",\n\t\"to\": \"Riho\",\n\t\"date\": \"29-02-20\",\n\t\"amount\": \"0.0001\"\n}"}

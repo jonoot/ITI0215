@@ -12,7 +12,7 @@ run `npm install` in project directory
 #### Initializing
 To start a new peer run `node peer.js p=<port>` in project directory
 
-Start server peers before running new nodes. Server ports are listed in 'servers.txt' (8080, 9000, 9001)
+Start server peers before running new nodes. Server addresses are listed in 'servers.txt'
 
 If starting new peer is successful, peer's already known hosts are logged in console. If port hasn't been
 used before (new peer) then a list of known peers will be created by reading data from 'servers.txt' file.
@@ -48,7 +48,7 @@ To view all blocks use GET request (/getBlocks). Use "hash" parameter to view bl
 
 #### GET
 
-`/known-peers?client=<clientPort>`
+`/known-peers?client=<clientAddresss>`
 <br>returns list of known peers as string
 
 `/getBlocks`
