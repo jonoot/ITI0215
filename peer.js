@@ -1,7 +1,3 @@
-//TODO: Success/Error messages
-//TODO: IP värgindus üle vaadata!
-//TODO: Muu fine, aga tuleb topelt requeste??
-
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
@@ -296,9 +292,9 @@ function appendToFile(line) {
 }
 
 function removePeer(p) {
-    if (p !== '8080' && p !== '9000' && p !== '9001') {
+    const removePort = p.split(':')[1]
+    if (removePort !== '8080' && removePort !== '9000' && removePort !== '9001') {
         knownPeers = knownPeers.filter(h => h !== p);
-        console.log(knownPeers);
         fs.writeFile(filePath, knownPeers.join('\n'), function () {
 
         });
@@ -333,6 +329,7 @@ function makeGet(host, p) {
         }
         if (!error && response.statusCode === 200) {
             knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
+            knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
             console.log(knownPeers);
             console.log(body.split(','));
 
