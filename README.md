@@ -57,6 +57,9 @@ To view all blocks use GET request (/getBlocks). Use "hash" parameter to view bl
 `/getBlocks?hash=<hash>`
 <br>returns list of blocks as JSON objects starting from given hash
 
+`/block?hash=<hash>`
+<br>returns block by hash
+
 #### POST
 
 `/inv`

@@ -85,6 +85,13 @@ function handleGet(req, res) {
                 endRes(res, 404, '', 'No blocks found');
             }
         }
+    } else if (parsedUrl.pathname === '/block') {
+        const hash = parsedUrl.query.hash;
+        if (hash && fileExists(blockFilePath)) {
+            returnBlockDetails(hash, res);
+        } else {
+            endRes(res, 404, '', 'No blocks found');
+        }
     } else {
         endRes(res, 500, '', 'Endpoint not defined');
     }
@@ -164,6 +171,27 @@ function returnBlocksFromHash(hash, res) {
             data.forEach(row => {
                 if (row.includes(hash)) {
                     endRes(res, 200, {'Content-Type': 'application/json'}, data.slice(data.indexOf(row), data.length).toString());
+                }
+            });
+            endRes(res, 404, '', 'Not found');
+        } catch (e) {
+            console.log(e);
+            endRes(res, 500, '', 'Error reading blocks');
+        }
+    });
+}
+
+function returnBlockDetails(hash, res) {
+    fs.readFile(blockFilePath, 'utf8', function (error, data) {
+        if (error) {
+            console.log('Error:- ' + error);
+            endRes(res, 500, '', 'Error reading blocks');
+        }
+        try {
+            data = data.split('\n');
+            data.forEach(row => {
+                if (row.includes(hash)) {
+                    endRes(res, 200, {'Content-Type': 'application/json'}, row.toString());
                 }
             });
             endRes(res, 404, '', 'Not found');
