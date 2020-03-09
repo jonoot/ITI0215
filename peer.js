@@ -104,7 +104,7 @@ function handlePost(req, res) {
         if (req.url === '/inv') {
             if (validTransaction(JSON.parse(body))) {
                 console.log('Transaction valid');
-                let transaction = createTransaction(body);
+                transaction = createTransaction(body);
                 transactionExists(transaction, function (result) {
                     if (!result) {
                         transaction = JSON.stringify(transaction);
@@ -118,8 +118,13 @@ function handlePost(req, res) {
             }
 
         } else if (req.url === '/block') {
-            transaction = body;
-            console.log(transaction);
+            let requestBody = JSON.parse(body);
+            console.log('Incoming transaction from peer: ' + requestBody.peer);
+            console.log(requestBody);
+            if (!knownPeers.includes(requestBody.peer)) {
+                appendToFile(requestBody.peer)
+            }
+            transaction = requestBody.body;
             saveTransaction(transaction, res);
         } else {
             endRes(res, 500, '', 'Endpoint not defined');
@@ -253,11 +258,22 @@ function saveTransactionAndSendToOthers(transaction, res) {
         console.log('POSTing new transaction to ' + peer);
         const req_url = 'http://' + peer + '/block';
 
+        let transactionToSend = {};
+        transactionToSend.body = transaction;
+        transactionToSend.peer = peerHost + ':' + port;
+
+        console.log('TRANSACTION: ');
+        console.log(transactionToSend);
+
         request.post({
-            headers: {'content-type': 'text'},
+            headers: {'content-type': 'application/json'},
             url: req_url,
-            body: transaction
+            body: JSON.stringify(transactionToSend)
         }, function (error, response, body) {
+            if (error) {
+                console.log('ERROR OCCURRED: ');
+                console.log(error);
+            }
             console.log(body);
         });
     });
