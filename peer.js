@@ -1,4 +1,6 @@
-//TODO: deleting unreachable peer is not working
+//TODO: ära saada endale requeste
+//TODO: update readme
+//TODO: check console.logs
 
 const http = require('http');
 const url = require('url');
@@ -305,7 +307,10 @@ function saveTransactionAndSendToOthers(transaction, res) {
 
 function startSendingRequests() {
     setInterval(function () {
+        console.log('PAUSED')
+        console.log(paused)
         if (!paused) {
+            console.log('Jälle siin')
             const p = knownPeers[Math.floor(Math.random() * knownPeers.length)];
             makeGet(p.split(':')[0], p.split(':')[1])
         }
@@ -343,6 +348,7 @@ function removePeer(p) {
 }
 
 function retryRequest(h, p) {
+    //TODO: refactor this one
     let count = 1;
     const interval = setInterval(function () {
         if (!retrying) {
@@ -350,15 +356,31 @@ function retryRequest(h, p) {
             paused = false;
         }
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
-        makeGet(h, p);
+        const req_url = 'http://' + h + ':' + p + '/known-peers?client=' + peerHost + ':' + port;
         count++;
-        if (count > 5 && retrying) {
-            console.log('Peer unreachable. Deleting from known peers');
-            removePeer(h + ':' + p);
-            clearInterval(interval);
-            paused = false;
-        }
-    }, 4000)
+        request({url: req_url}, function (error) {
+            if (error && count > 5) {
+                paused = false;
+                removePeer(h + ':' + p);
+                clearInterval(interval);
+            }
+            if (!error) {
+                retrying = false;
+                paused = false;
+                knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
+                knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
+                console.log(body.split(',') + '\n');
+
+                fs.writeFile(filePath, knownPeers.join('\n'), function () {
+
+                });
+            }
+        });
+    }, 2000)
+}
+
+function ping(h, p) {
+
 }
 
 function makeGet(host, p) {
