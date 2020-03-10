@@ -155,12 +155,17 @@ function returnKnownPeers(req, parsedUrl, res) {
 }
 
 function returnAllBlocks(res) {
+    let allHashes = [];
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
+        let JSONObject = JSON.parse('[' + data.split('\n').filter(e => e !== '').toString() + ']');
+        JSONObject.forEach(obj => {
+            allHashes.push(Object.keys(obj))
+        });
         if (error) {
             console.log('Error:- ' + error);
             endRes(res, 500,'', 'Error reading blocks');
         }
-        endRes(res, 200, {'Content-Type': 'application/json'}, data.split('\n').toString());
+        endRes(res, 200, {'Content-Type': 'application/json'}, JSON.stringify(allHashes));
     });
 }
 
