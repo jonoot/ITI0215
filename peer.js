@@ -179,7 +179,16 @@ function returnBlocksFromHash(hash, res) {
             data = data.split('\n');
             data.forEach(row => {
                 if (row.includes(hash)) {
-                    endRes(res, 200, {'Content-Type': 'application/json'}, data.slice(data.indexOf(row), data.length).toString());
+                    let hashes = [];
+
+                    let blocksFromHash = data.slice(data.indexOf(row), data.length);
+                    console.log(blocksFromHash);
+                    let JSONObject = JSON.parse('[' + blocksFromHash.filter(e => e !== '') + ']');
+                    JSONObject.forEach(block => {
+                        hashes.push(Object.keys(block))
+                    });
+
+                    endRes(res, 200, {'Content-Type': 'application/json'}, JSON.stringify(hashes));
                 }
             });
             endRes(res, 404, '', 'Not found');
