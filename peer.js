@@ -1,3 +1,5 @@
+//TODO: deleting unreachable peer is not working
+
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
@@ -72,14 +74,14 @@ function handleGet(req, res) {
             if (fileExists(blockFilePath)) {
                 returnBlocksFromHash(hash, res);
             } else {
-                endRes(res, 404, '', 'No blocks found');
+                endRes(res, 404, {'Content-Type': 'application/json'}, errorMessage('No blocks found'));
             }
 
         } else {
             if (fileExists(blockFilePath)) {
                 returnAllBlocks(res);
             } else {
-                endRes(res, 404, '', 'No blocks found');
+                endRes(res, 404, {'Content-Type': 'application/json'}, errorMessage('No blocks found'));
             }
         }
     } else if (parsedUrl.pathname === '/block') {
@@ -87,10 +89,10 @@ function handleGet(req, res) {
         if (hash && fileExists(blockFilePath)) {
             returnBlockDetails(hash, res);
         } else {
-            endRes(res, 404, '', 'No blocks found');
+            endRes(res, 404, {'Content-Type': 'application/json'}, errorMessage('No blocks found'));
         }
     } else {
-        endRes(res, 500, '', 'Endpoint not defined');
+        endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Endpoint not defined'));
     }
 }
 
@@ -110,11 +112,11 @@ function handlePost(req, res) {
                         transaction = JSON.stringify(transaction);
                         saveTransactionAndSendToOthers(transaction, res);
                     } else {
-                        endRes(res, 400, '', 'Transaction already exists');
+                        endRes(res, 400, {'Content-Type': 'application/json'}, errorMessage('Transaction already exists'));
                     }
                 })
             } else {
-                endRes(res, 400, '', 'Transaction not valid');
+                endRes(res, 400, {'Content-Type': 'application/json'}, errorMessage('Transaction not valid'));
             }
 
         } else if (req.url === '/block') {
@@ -127,7 +129,7 @@ function handlePost(req, res) {
             transaction = requestBody.body;
             saveTransaction(transaction, res);
         } else {
-            endRes(res, 500, '', 'Endpoint not defined');
+            endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Endpoint not defined'));
         }
 
     })
@@ -142,8 +144,16 @@ function endRes(res, head, contentType, end) {
     res.end(end);
 }
 
+function errorMessage(message) {
+    return JSON.stringify({errMessage: message})
+}
+
+function successMessage(message) {
+    return JSON.stringify({success: message})
+}
+
 function returnKnownPeers(req, parsedUrl, res) {
-    console.log(req.url);
+    console.log(req.url + '\n');
     const clientPort = parsedUrl.query.client;
     if (!knownPeers.includes(clientPort)) {
         console.log('Adding new port ' + clientPort + ' to known peers \n');
@@ -161,7 +171,7 @@ function returnAllBlocks(res) {
         });
         if (error) {
             console.log('Error:- ' + error);
-            endRes(res, 500,'', 'Error reading blocks');
+            endRes(res, 500,{'Content-Type': 'application/json'}, errorMessage('Error reading blocks'));
         }
         endRes(res, 200, {'Content-Type': 'application/json'}, JSON.stringify(allHashes));
     });
@@ -171,7 +181,7 @@ function returnBlocksFromHash(hash, res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            endRes(res, 500, '', 'Error reading blocks');
+            endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Error reading blocks'));
         }
         try {
             data = data.split('\n');
@@ -189,10 +199,10 @@ function returnBlocksFromHash(hash, res) {
                     endRes(res, 200, {'Content-Type': 'application/json'}, JSON.stringify(hashes));
                 }
             });
-            endRes(res, 404, '', 'Not found');
+            endRes(res, 404, {'Content-Type': 'application/json'}, errorMessage('Not found'));
         } catch (e) {
             console.log(e);
-            endRes(res, 500, '', 'Error reading blocks');
+            endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Error reading blocks'));
         }
     });
 }
@@ -201,7 +211,7 @@ function returnBlockDetails(hash, res) {
     fs.readFile(blockFilePath, 'utf8', function (error, data) {
         if (error) {
             console.log('Error:- ' + error);
-            endRes(res, 500, '', 'Error reading blocks');
+            endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Error reading blocks'));
         }
         try {
             data = data.split('\n');
@@ -210,10 +220,10 @@ function returnBlockDetails(hash, res) {
                     endRes(res, 200, {'Content-Type': 'application/json'}, row.toString());
                 }
             });
-            endRes(res, 404, '', 'Not found');
+            endRes(res, 404, {'Content-Type': 'application/json'}, errorMessage('Not found'));
         } catch (e) {
             console.log(e);
-            endRes(res, 500, '', 'Error reading blocks');
+            endRes(res, 500, {'Content-Type': 'application/json'}, errorMessage('Error reading blocks'));
         }
     });
 }
@@ -240,11 +250,11 @@ function saveTransaction(transaction, res) {
         const stream = fs.createWriteStream(blockFilePath, {flags: 'a'});
         stream.write(transaction + '\n');
         stream.end();
-        endRes(res, 200, {'Content-Type': 'text/html'}, 'post received');
+        endRes(res, 200, {'Content-Type': 'application/json'}, successMessage('post received'));
     } else {
         fs.writeFile(blockFilePath, transaction + '\n', function (err) {
             if (!err) {
-                endRes(res, 200, {'Content-Type': 'text/html'}, 'post received');
+                endRes(res, 200, {'Content-Type': 'application/json'}, successMessage('post received'));
             }
         })
     }
@@ -367,7 +377,7 @@ function makeGet(host, p) {
             retrying = false;
             knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
             knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
-            console.log(body.split(','));
+            console.log(body.split(',') + '\n');
 
             fs.writeFile(filePath, knownPeers.join('\n'), function () {
 
