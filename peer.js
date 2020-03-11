@@ -1,4 +1,3 @@
-//TODO: ära saada endale requeste
 //TODO: update readme
 //TODO: check console.logs
 
@@ -12,7 +11,6 @@ let port = 0;
 let peerHost = 0;
 let knownPeers = [];
 let paused = false;
-let retrying = false;
 
 process.argv.forEach(arg => {
     if (arg.includes('p=')) {
@@ -52,7 +50,7 @@ try {
         fs.writeFile(filePath,'', function (err) {
             if (!err) {
                 getDataFromFile('servers.txt', function (servers) {
-                    servers.forEach(s => {
+                    servers.filter(s => s !== peerHost + ':' + port).forEach(s => {
                         appendToFile(s);
                     });
                     console.log('Known peers: ');
@@ -307,10 +305,9 @@ function saveTransactionAndSendToOthers(transaction, res) {
 
 function startSendingRequests() {
     setInterval(function () {
-        console.log('PAUSED')
-        console.log(paused)
-        if (!paused) {
-            console.log('Jälle siin')
+        console.log('PAUSED');
+        console.log(paused);
+        if (!paused && knownPeers.length) {
             const p = knownPeers[Math.floor(Math.random() * knownPeers.length)];
             makeGet(p.split(':')[0], p.split(':')[1])
         }
@@ -340,6 +337,7 @@ function appendToFile(line) {
 function removePeer(p) {
     const removePort = p.split(':')[1];
     if (removePort !== '8080' && removePort !== '9000' && removePort !== '9001') {
+        console.log('Removed peer ' + p);
         knownPeers = knownPeers.filter(h => h !== p);
         fs.writeFile(filePath, knownPeers.join('\n'), function () {
 
@@ -348,39 +346,34 @@ function removePeer(p) {
 }
 
 function retryRequest(h, p) {
-    //TODO: refactor this one
     let count = 1;
     const interval = setInterval(function () {
-        if (!retrying) {
-            clearInterval(interval);
-            paused = false;
-        }
         console.log('Retrying to connect peer ' + h + ':' + p + ' - Tried ' + count + ' times...\n');
         const req_url = 'http://' + h + ':' + p + '/known-peers?client=' + peerHost + ':' + port;
         count++;
-        request({url: req_url}, function (error) {
+        request({url: req_url}, function (error, response, body) {
             if (error && count > 5) {
                 paused = false;
                 removePeer(h + ':' + p);
                 clearInterval(interval);
             }
             if (!error) {
-                retrying = false;
                 paused = false;
-                knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
-                knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
-                console.log(body.split(',') + '\n');
-
-                fs.writeFile(filePath, knownPeers.join('\n'), function () {
-
-                });
+                saveKnownPeers(body);
+                clearInterval(interval)
             }
         });
     }, 2000)
 }
 
-function ping(h, p) {
+function saveKnownPeers(body) {
+    knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
+    knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
+    console.log(body.split(',') + '\n');
 
+    fs.writeFile(filePath, knownPeers.join('\n'), function () {
+
+    });
 }
 
 function makeGet(host, p) {
@@ -391,19 +384,11 @@ function makeGet(host, p) {
             console.log(host + ':' + p + ' unreachable\n');
             if (!paused) {
                 paused = true;
-                retrying = true;
                 retryRequest(host, p)
             }
         }
         if (!error && response.statusCode === 200) {
-            retrying = false;
-            knownPeers = [...new Set(knownPeers.concat(body.split(',')))];
-            knownPeers = knownPeers.filter(peer => peer !== (peerHost + ':' + port));
-            console.log(body.split(',') + '\n');
-
-            fs.writeFile(filePath, knownPeers.join('\n'), function () {
-
-            });
+            saveKnownPeers(body);
         }
     })
 }
