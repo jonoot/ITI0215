@@ -108,3 +108,10 @@ fields filled
            }`
 <br>saves transaction straight to receiving client's blocks file. If sender is unknown for the receiving peer,
 sender address will be added as known peer.
+
+### Using multiple machines to run peers
+Using multiple machines to run peers works fine. Functionality works the same way as it does on running
+peers in one machine. **Only important thing to keep in mind** is to set correct servers' IP addresses
+in every machine. **For example:** if server peer is started in a machine which IP address is
+111.11.11.111 and on port 9000 then every machine must change servers.txt file. If servers file had previously
+server peer '127.0.0.1:9000' then it has to be changed to '111.11.11.111:9000'.
