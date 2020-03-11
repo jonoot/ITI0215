@@ -1,6 +1,4 @@
 //TODO: update readme
-//TODO: check console.logs
-
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
@@ -105,7 +103,6 @@ function handlePost(req, res) {
     req.on('end', function() {
         if (req.url === '/inv') {
             if (validTransaction(JSON.parse(body))) {
-                console.log('Transaction valid');
                 transaction = createTransaction(body);
                 transactionExists(transaction, function (result) {
                     if (!result) {
@@ -188,9 +185,7 @@ function returnBlocksFromHash(hash, res) {
             data.forEach(row => {
                 if (row.includes(hash)) {
                     let hashes = [];
-
                     let blocksFromHash = data.slice(data.indexOf(row), data.length);
-                    console.log(blocksFromHash);
                     let JSONObject = JSON.parse('[' + blocksFromHash.filter(e => e !== '') + ']');
                     JSONObject.forEach(block => {
                         hashes.push(Object.keys(block))
@@ -285,18 +280,13 @@ function saveTransactionAndSendToOthers(transaction, res) {
         let transactionToSend = {};
         transactionToSend.body = transaction;
         transactionToSend.peer = peerHost + ':' + port;
-
-        console.log('TRANSACTION: ');
-        console.log(transactionToSend);
-
         request.post({
             headers: {'content-type': 'application/json'},
             url: req_url,
             body: JSON.stringify(transactionToSend)
         }, function (error, response, body) {
             if (error) {
-                console.log('ERROR OCCURRED: ');
-                console.log(error);
+                console.log('ERROR: ', error);
             }
             console.log(body);
         });
@@ -305,8 +295,7 @@ function saveTransactionAndSendToOthers(transaction, res) {
 
 function startSendingRequests() {
     setInterval(function () {
-        console.log('PAUSED');
-        console.log(paused);
+        console.log('Automatic request sending paused: ', paused);
         if (!paused && knownPeers.length) {
             const p = knownPeers[Math.floor(Math.random() * knownPeers.length)];
             makeGet(p.split(':')[0], p.split(':')[1])
