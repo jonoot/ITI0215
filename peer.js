@@ -352,7 +352,7 @@ function retryRequest(h, p) {
                 clearInterval(interval)
             }
         });
-    }, 5)
+    }, 5000)
 }
 
 function saveKnownPeers(body) {
