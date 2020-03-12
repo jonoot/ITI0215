@@ -115,3 +115,4 @@ peers in one machine. **Only important thing to keep in mind** is to set correct
 in every machine. **For example:** if server peer is started in a machine which IP address is
 111.11.11.111 and on port 9000 then every machine must change servers.txt file. If servers file had previously
 server peer '127.0.0.1:9000' then it has to be changed to '111.11.11.111:9000'.
+<br> Adding/removing peers and new blocks to files might be delayed.
