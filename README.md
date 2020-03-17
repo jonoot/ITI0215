@@ -48,6 +48,8 @@ To view all blocks use GET request (/getBlocks). Use "hash" parameter to view bl
 
 ### Endpoints
 
+All endpoints have been tested using Postman
+
 #### GET
 
 `/known-peers?client=<clientAddresss>`
