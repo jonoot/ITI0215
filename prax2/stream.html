@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stream</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <script>
+
+        let clickedVideo = false;
+
+        const recordingMediaTypes = {
+            audio: false,
+            video: true
+        };
+
+        function blobToBase64(blob, cb) {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let dataUrl = reader.result;
+                let base64 = dataUrl.split(',')[1];
+                cb(base64);
+            };
+            reader.readAsDataURL(blob);
+        }
+
+        function openCamera() {
+            if (!clickedVideo) {
+                clickedVideo = true;
+                console.log('Opening camera...2');
+                navigator.mediaDevices.getUserMedia(recordingMediaTypes)
+                    .then((mediaInput) => {
+                        console.log(mediaInput); // Sissetulev meedia
+                        let videoEl = document.querySelector('video');
+                        if ("srcObject" in videoEl) {
+                            videoEl.srcObject = mediaInput;
+                        }
+
+                        videoEl.onloadedmetadata = function () {
+                            videoEl.play(); // Kuva kaamerast tulev pilt video elementi
+                        };
+
+                        let mediaRecorder = new MediaRecorder(mediaInput);
+                        let mediaData = [];
+
+                        // start recording
+                        document.getElementById('startRecording')
+                            .addEventListener('click', () => {
+                                console.log('started recording');
+                                $('#startRecording').attr('disabled', true);
+                                $('#stopRecording').attr('disabled', false);
+                                mediaRecorder.start();
+                            });
+
+                        // stop recording
+                        document.getElementById('stopRecording')
+                            .addEventListener('click', () => {
+                                console.log('stopped recording');
+                                $('#startRecording').attr('disabled', false);
+                                $('#stopRecording').attr('disabled', true);
+                                mediaRecorder.stop();
+                            });
+
+                        // save chunks of data
+                        mediaRecorder.ondataavailable = function (event) {
+                            mediaData.push(event.data)
+                        };
+
+                        // save data as video after stopping
+                        mediaRecorder.onstop = () => {
+                            console.log('Media recorder got stop signal');
+                            let dataBlob = new Blob(mediaData, {'type': 'video/mp4'});
+
+                            blobToBase64(dataBlob, function(base64) {
+                                let obj = {'blob': base64};
+                                let dataToSend = JSON.stringify(obj);
+                                console.log(dataToSend);
+                                $.post('https://192.168.1.100:3001/saveVideo', obj, function (data, status) {
+                                    console.log(data);
+                                    console.log(status)
+                                })
+                            });
+                            mediaData = [];
+
+                        }
+
+                    })
+            }
+        }
+
+        function downloadVideo(videoId) {
+            console.log('downloading video with id: ', videoId);
+            window.open('https://192.168.1.100:3001/video/download/' + videoId)
+        }
+
+        function getVideo(videoId) {
+            console.log(videoId);
+            let playVideo = $('#playVideo');
+            playVideo.empty();
+            playVideo.append('<video controls>\n' +
+                '        <source src="https://192.168.1.100:3001/video/' + videoId + '" type="video/webm">\n' +
+                '    </video>\n' +
+                '<button onclick="downloadVideo(' + videoId +')">Download</button>');
+        }
+
+        function getSavedVideos() {
+            $.get("https://192.168.1.100:3001/video", function(data, status){
+                $('#savedVideos').empty();
+                for (i = 0; i < data.length; i++) {
+                    let videoId = data[i];
+                    let row = '<span onclick="getVideo(' + videoId + ')">Video - ' + videoId + ' </span><br>';
+                    console.log(row);
+                    $('#savedVideos').append(row);
+                }
+            });
+        }
+
+
+
+    </script>
+
+</head>
+<body>
+    <h1>HTML</h1>
+
+    <button id="backButton" style="visibility: hidden">tagasi</button>
+
+    <div id="user-media" style="display: flex">
+        <span>Kaamera: </span>
+        <video style="border: 2px solid black; background-color: lightgray" onclick="openCamera()"></video>
+    </div>
+
+    <div style="margin: 20px">
+        <button type="button" class="btn btn-primary" style="margin: 5px" id="startRecording">Start recording</button>
+        <button type="button" class="btn btn-danger" style="margin: 5px" id="stopRecording" disabled>Stop recording</button>
+    </div>
+
+    <button onclick="getSavedVideos()">Salvestatud videod</button>
+    <div id="savedVideos">
+
+    </div>
+
+    <div id="playVideo"></div>
+
+</body>
+</html>
